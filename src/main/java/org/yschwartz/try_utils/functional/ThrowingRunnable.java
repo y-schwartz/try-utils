@@ -8,11 +8,10 @@ package org.yschwartz.try_utils.functional;
 @FunctionalInterface
 public interface ThrowingRunnable {
 
-	/**
-	 * Performs the task.
-	 *
-	 * @throws Exception
-	 *             if the task Threw an Exception
-	 */
-	void run() throws Exception;
+    /**
+     * Performs the task.
+     *
+     * @throws Exception if the task Threw an Exception
+     */
+    void run() throws Exception;
 }
