@@ -1,5 +1,6 @@
 # try-utils
 Utils for writing Java try/catch code blocks in a functional style
+[Javadoc](https://htmlpreview.github.io/?https://github.com/y-schwartz/try-utils/blob/main/docs/index.html)
 
 # Examples
 The following:
