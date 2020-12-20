@@ -3,6 +3,16 @@ Utils for writing Java try/catch code blocks in a functional style
 
 [Javadoc](https://htmlpreview.github.io/?https://raw.githubusercontent.com/y-schwartz/try-utils/main/docs/org/yschwartz/try_utils/TryUtils.html)
 
+
+# Maven dependency
+
+    <dependency>
+	    <groupId>org.yschwartz</groupId> 
+	    <artifactId>try-utils</artifactId>  
+	    <version>1.0.0</version>  
+	</dependency>
+
+
 # Examples
 The following:
 
