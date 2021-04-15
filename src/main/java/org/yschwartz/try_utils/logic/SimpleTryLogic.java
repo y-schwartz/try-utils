@@ -10,9 +10,15 @@ public class SimpleTryLogic<R> extends BaseTryLogic<R> {
         this.tryCallable = tryCallable;
     }
 
+    @Override
+    public R call() throws Exception {
+        return tryCallable.call();
+    }
+
+    @Override
     public R execute() {
         try {
-            return tryCallable.call();
+            return doTry();
         } catch (Exception e) {
             return doCatch(e);
         } finally {

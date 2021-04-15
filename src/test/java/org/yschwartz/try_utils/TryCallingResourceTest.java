@@ -2,18 +2,18 @@ package org.yschwartz.try_utils;
 
 import org.junit.Test;
 import org.yschwartz.try_utils.exception.ExceptionA;
+import org.yschwartz.try_utils.model.Try;
 import org.yschwartz.try_utils.resource.TestResource;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
-import static org.yschwartz.try_utils.TryUtils.tryCallingResource;
 
 public class TryCallingResourceTest {
     private final TestResource testResource = new TestResource();
 
     @Test
     public void testTry() {
-        String value1 = tryCallingResource(testResource, this::getValue1).execute();
+        String value1 = Try.of(testResource, this::getValue1).execute();
         assertEquals("value1", value1);
         assert testResource.isClosed();
     }
@@ -21,7 +21,7 @@ public class TryCallingResourceTest {
     @Test
     public void testTryThrows() {
         try {
-            tryCallingResource(testResource, this::throwA).execute();
+            Try.of(testResource, this::throwA).execute();
             fail();
         } catch (ExceptionA ignored) {
         }

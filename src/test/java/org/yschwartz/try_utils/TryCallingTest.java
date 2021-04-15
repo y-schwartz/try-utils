@@ -3,35 +3,35 @@ package org.yschwartz.try_utils;
 import org.junit.Test;
 import org.yschwartz.try_utils.exception.ExceptionA;
 import org.yschwartz.try_utils.exception.ExceptionB;
+import org.yschwartz.try_utils.model.Try;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
-import static org.yschwartz.try_utils.TryUtils.tryCalling;
 
 public class TryCallingTest {
     private final AtomicBoolean boolean1 = new AtomicBoolean();
 
     @Test
     public void testTry() {
-        String value1 = tryCalling(this::getValue1).execute();
+        String value1 = Try.of(this::getValue1).execute();
         assertEquals("value1", value1);
     }
 
     @Test(expected = ExceptionA.class)
     public void testTryThrows() {
-        tryCalling(this::throwA).execute();
+        Try.of(this::throwA).execute();
     }
 
     @Test(expected = RuntimeException.class)
     public void testTryThrowsChecked() {
-        tryCalling(this::throwChecked).execute();
+        Try.of(this::throwChecked).execute();
     }
 
     @Test
     public void testFinally() {
-        String value1 = tryCalling(this::getValue1).finallyRun(this::setBoolean1).execute();
+        String value1 = Try.of(this::getValue1).finallyDo(this::setBoolean1).execute();
         assert boolean1.get();
         assertEquals("value1", value1);
     }
@@ -39,7 +39,7 @@ public class TryCallingTest {
     @Test
     public void testTryThrowsFinally() {
         try {
-            tryCalling(this::throwA).finallyRun(this::setBoolean1).execute();
+            Try.of(this::throwA).finallyDo(this::setBoolean1).execute();
             fail();
         } catch (ExceptionA ignored) {
         }
@@ -48,55 +48,91 @@ public class TryCallingTest {
 
     @Test
     public void testCatch() {
-        String value1 = tryCalling(this::getValue1).catchAny().thenReturn("value2").execute();
+        String value1 = Try.of(this::getValue1).catchAny().thenReturn("value2").execute();
         assertEquals("value1", value1);
     }
 
     @Test
     public void testTryThrowsCatch() {
-        String value1 = tryCalling(this::throwA).catchAny().thenReturn(t -> getValue1()).execute();
+        String value1 = Try.of(this::throwA).catchAny().thenReturn(t -> getValue1()).execute();
         assertEquals("value1", value1);
     }
 
     @Test
     public void testTryThrowsExplicitCatch() {
-        String value1 = tryCalling(this::throwA).catchException(RuntimeException.class).thenReturn(t -> getValue1())
+        String value1 = Try.of(this::throwA).catchException(RuntimeException.class).thenReturn(t -> getValue1())
                 .execute();
         assertEquals("value1", value1);
     }
 
     @Test(expected = ExceptionA.class)
     public void testTryThrowsNotCaught() {
-        tryCalling(this::throwA).catchException(ExceptionB.class).thenReturn(t -> getValue1()).execute();
+        Try.of(this::throwA).catchException(ExceptionB.class).thenReturn(t -> getValue1()).execute();
     }
 
     @Test
     public void testDoubleCatchFirst() {
-        String value1 = tryCalling(this::throwA).catchException(ExceptionA.class).thenReturn(t -> getValue1())
+        String value1 = Try.of(this::throwA).catchException(ExceptionA.class).thenReturn(t -> getValue1())
                 .catchException(RuntimeException.class).thenReturn("value2").execute();
         assertEquals("value1", value1);
     }
 
     @Test
     public void testDoubleCatchSecond() {
-        String value2 = tryCalling(this::throwA).catchException(ExceptionB.class).thenReturn(t -> getValue1())
+        String value2 = Try.of(this::throwA).catchException(ExceptionB.class).thenReturn(t -> getValue1())
                 .catchException(RuntimeException.class).thenReturn("value2").execute();
         assertEquals("value2", value2);
     }
 
     @Test(expected = ExceptionB.class)
     public void testCatchAndThrow() {
-        tryCalling(this::throwA).catchAny().thenThrow(t -> new ExceptionB()).execute();
+        Try.of(this::throwA).catchAny().thenThrow(t -> new ExceptionB()).execute();
     }
 
     @Test(expected = ExceptionB.class)
     public void testCatchAndThrowExplicit() {
-        tryCalling(this::throwA).catchException(RuntimeException.class).thenThrow(t -> new ExceptionB()).execute();
+        Try.of(this::throwA).catchException(RuntimeException.class).thenThrow(t -> new ExceptionB()).execute();
     }
 
     @Test(expected = ExceptionA.class)
     public void testCatchAndThrowNotCaught() {
-        tryCalling(this::throwA).catchException(ExceptionB.class).thenThrow(t -> t).execute();
+        Try.of(this::throwA).catchException(ExceptionB.class).thenThrow(t -> t).execute();
+    }
+
+    @Test
+    public void testTryMap() {
+        boolean actual = Try.of(() -> "test")
+                .map(b -> b.equals("test"))
+                .execute();
+        assert actual;
+    }
+
+    @Test(expected = ExceptionA.class)
+    public void testTryMapThrows() {
+        Try.of(this::throwA).map(b -> null).execute();
+    }
+
+    @Test(expected = ExceptionA.class)
+    public void testTryMapThrowsSecond() {
+        Try.of(() -> null).map(x -> throwA()).execute();
+    }
+
+    @Test
+    public void testTryMapCatch() {
+        boolean actual = Try.of(this::throwA)
+                .catchAny().thenReturn("test")
+                .map(b -> b.equals("test"))
+                .execute();
+        assert actual;
+    }
+
+    @Test
+    public void testTryMapCatchSecond() {
+        boolean actual = Try.of(this::throwA)
+                .map(b -> false)
+                .catchAny().thenReturn(true)
+                .execute();
+        assert actual;
     }
 
     private String getValue1() {

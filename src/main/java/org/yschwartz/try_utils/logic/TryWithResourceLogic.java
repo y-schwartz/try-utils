@@ -12,9 +12,15 @@ public class TryWithResourceLogic<S extends AutoCloseable, R> extends BaseTryLog
         this.tryFunction = tryFunction;
     }
 
+    @Override
+    public R call() throws Exception {
+        return tryFunction.apply(resource);
+    }
+
+    @Override
     public R execute() {
-        try (S resource = this.resource) {
-            return tryFunction.apply(resource);
+        try (resource) {
+            return doTry();
         } catch (Exception e) {
             return doCatch(e);
         } finally {

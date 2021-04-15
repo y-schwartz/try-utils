@@ -3,12 +3,12 @@ package org.yschwartz.try_utils;
 import org.junit.Test;
 import org.yschwartz.try_utils.exception.ExceptionA;
 import org.yschwartz.try_utils.exception.ExceptionB;
+import org.yschwartz.try_utils.model.Try;
 import org.yschwartz.try_utils.resource.TestResource;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.Assert.fail;
-import static org.yschwartz.try_utils.TryUtils.tryRunningResource;
 
 public class TryRunningResourceTest {
     private final AtomicBoolean boolean1 = new AtomicBoolean();
@@ -17,7 +17,7 @@ public class TryRunningResourceTest {
 
     @Test
     public void testTry() {
-        tryRunningResource(testResource, this::setBoolean1).execute();
+        Try.of(testResource, this::setBoolean1).execute();
         assert boolean1.get();
         assert testResource.isClosed();
     }
@@ -25,7 +25,7 @@ public class TryRunningResourceTest {
     @Test
     public void testTryThrows() {
         try {
-            tryRunningResource(testResource, this::throwA).execute();
+            Try.of(testResource, this::throwA).execute();
             fail();
         } catch (ExceptionA ignored) {
         }
@@ -35,7 +35,7 @@ public class TryRunningResourceTest {
     @Test
     public void testTryThrowsFinally() {
         try {
-            tryRunningResource(testResource, this::throwA).finallyRun(this::setBoolean2).execute();
+            Try.of(testResource, this::throwA).finallyDo(this::setBoolean2).execute();
             fail();
         } catch (ExceptionA ignored) {
         }
@@ -46,7 +46,7 @@ public class TryRunningResourceTest {
     @Test
     public void testFinallyThrows() {
         try {
-            tryRunningResource(testResource, this::throwA).finallyRun(this::throwB).execute();
+            Try.of(testResource, this::throwA).finallyDo(this::throwB).execute();
             fail();
         } catch (ExceptionA | ExceptionB ignored) {
         }
@@ -56,7 +56,7 @@ public class TryRunningResourceTest {
     @Test
     public void testCloseThrows() {
         try {
-            tryRunningResource(testResource, TestResource::close).finallyRun(this::setBoolean2).execute();
+            Try.of(testResource, TestResource::close).finallyDo(this::setBoolean2).execute();
             fail();
         } catch (RuntimeException ignored) {
         }

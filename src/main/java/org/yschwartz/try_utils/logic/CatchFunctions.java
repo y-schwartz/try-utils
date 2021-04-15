@@ -2,7 +2,8 @@ package org.yschwartz.try_utils.logic;
 
 import java.util.LinkedList;
 import java.util.function.Function;
-import java.util.function.Supplier;
+
+import static org.yschwartz.try_utils.util.ExceptionUtils.getRuntimeException;
 
 public class CatchFunctions<R> extends LinkedList<CatchFunctions.CatchFunction<? extends Exception, R>> {
 
@@ -10,34 +11,26 @@ public class CatchFunctions<R> extends LinkedList<CatchFunctions.CatchFunction<?
         super();
     }
 
-    <T extends Exception> void addCatchFunction(Class<T> exceptionType, Function<T, R> exceptionToValueFunction) {
-        add(new CatchFunction<>(exceptionType, exceptionToValueFunction));
+    <E extends Exception> void add(ExceptionMatcher<E> exceptionMatcher, Function<E, R> exceptionToValueFunction) {
+        add(new CatchFunction<>(exceptionMatcher, exceptionToValueFunction));
     }
 
-    R applyFunction(Exception e) {
-        return stream().filter(catchFunction -> catchFunction.isExceptionType(e)).findFirst()
-                .orElseThrow(getRuntimeException(e)).applyFunction(e);
+    R apply(Exception e) {
+        return stream().filter(catchFunction -> catchFunction.exceptionMatcher.matches(e)).findFirst()
+                .orElseThrow(() -> getRuntimeException(e)).apply(e);
     }
 
-    private static Supplier<RuntimeException> getRuntimeException(Exception e) {
-        return () -> e instanceof RuntimeException ? (RuntimeException) e : new RuntimeException(e);
-    }
-
-    static class CatchFunction<E extends Exception, R> {
-        private final Class<E> exceptionType;
+    static class CatchFunction<E extends Exception, R> implements Function<E, R> {
+        private final ExceptionMatcher<E> exceptionMatcher;
         private final Function<E, R> exceptionToValueFunction;
 
-        private CatchFunction(Class<E> exceptionType, Function<E, R> exceptionToValueFunction) {
-            this.exceptionType = exceptionType;
+        CatchFunction(ExceptionMatcher<E> exceptionMatcher, Function<E, R> exceptionToValueFunction) {
+            this.exceptionMatcher = exceptionMatcher;
             this.exceptionToValueFunction = exceptionToValueFunction;
         }
 
-        private boolean isExceptionType(Exception e) {
-            return exceptionType.isInstance(e);
-        }
-
-        private R applyFunction(Exception e) {
-            return exceptionToValueFunction.apply(exceptionType.cast(e));
+        public R apply(Exception e) {
+            return exceptionToValueFunction.apply(exceptionMatcher.match(e));
         }
     }
 }
