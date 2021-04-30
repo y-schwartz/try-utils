@@ -1,25 +1,30 @@
-package org.yschwartz.try_utils.logic;
+package org.yschwartz.try_utils.util;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
+
 
 public class ExceptionMatcher<E extends Exception> {
     private final Class<E> exceptionType;
     private Predicate<E> filter;
 
     public ExceptionMatcher(Class<E> exceptionType) {
-        this.exceptionType = exceptionType;
+        this.exceptionType = Objects.requireNonNull(exceptionType);
     }
 
     public void addFilter(Predicate<E> filter) {
+        Objects.requireNonNull(filter);
         this.filter = Optional.ofNullable(this.filter).map(p -> p.and(filter)).orElse(filter);
     }
 
     public boolean matches(Exception e) {
-        return exceptionType.isInstance(e) && (filter == null || filter.test(exceptionType.cast(e)));
+        Objects.requireNonNull(e);
+        return exceptionType.isInstance(e) && (filter == null || filter.test(match(e)));
     }
 
     public E match(Exception e) {
+        Objects.requireNonNull(e);
         return exceptionType.cast(e);
     }
 }

@@ -1,6 +1,7 @@
 package org.yschwartz.try_utils.logic;
 
 import org.yschwartz.try_utils.model.Try;
+import org.yschwartz.try_utils.util.ExceptionMatcher;
 
 import java.util.Optional;
 import java.util.concurrent.Callable;
@@ -17,8 +18,7 @@ public class RetryLogic<R> implements Callable<R> {
     private final ExceptionMatcher<Exception> exceptionMatcher = new ExceptionMatcher<>(Exception.class);
     private final Callable<R> callable;
     private long maxAttempts = DEFAULT_ATTEMPTS;
-    private long fixedDelay = DEFAULT_DELAY;
-    private Function<Long, Long> delayFunction;
+    private Function<Long, Long> delayFunction = l -> (long) DEFAULT_DELAY;
     private BiConsumer<Exception, Long> failureConsumer;
 
     public RetryLogic(Callable<R> callable) {
@@ -31,11 +31,7 @@ public class RetryLogic<R> implements Callable<R> {
             try {
                 return callable.call();
             } catch (Exception e) {
-                if (!exceptionMatcher.matches(e)) {
-                    throw e;
-                }
-                consumeFailure(e, i);
-                sleep(i);
+                handleException(e, i);
             }
         }
         return callable.call();
@@ -50,7 +46,7 @@ public class RetryLogic<R> implements Callable<R> {
     }
 
     public void setFixedDelay(long fixedDelay) {
-        this.fixedDelay = fixedDelay;
+        setDelayFunction(l -> fixedDelay);
     }
 
     public void setDelayFunction(Function<Long, Long> delayFunction) {
@@ -58,21 +54,22 @@ public class RetryLogic<R> implements Callable<R> {
     }
 
     public void setFailureConsumer(BiConsumer<Exception, Long> failureConsumer) {
-        this.failureConsumer = failureConsumer;
+        this.failureConsumer = Optional.ofNullable(this.failureConsumer).map(c -> c.andThen(failureConsumer)).orElse(failureConsumer);
     }
 
-    private void sleep(long iteration) {
-        Optional.ofNullable(delayFunction)
-                .map(f -> f.apply(iteration))
-                .or(() -> Optional.of(fixedDelay))
-                .filter(l -> l > 0)
-                .map(l -> Try.of(() -> Thread.sleep(l)))
-                .map(t -> t.catchException(InterruptedException.class))
-                .map(c -> c.thenThrow(e -> new RuntimeException("Interrupted during retries", e)))
-                .ifPresent(Try::execute);
+    private void handleException(Exception e, long iteration) throws Exception {
+        if (!exceptionMatcher.matches(e)) {
+            throw e;
+        }
+        consumeFailure(e, iteration);
+        sleep(iteration);
     }
 
     private void consumeFailure(Exception e, long iteration) {
         Optional.ofNullable(failureConsumer).ifPresent(consumer -> consumer.accept(e, iteration));
+    }
+
+    private void sleep(long iteration) {
+        Try.of(() -> delayFunction.apply(iteration)).consume(Thread::sleep).execute();
     }
 }

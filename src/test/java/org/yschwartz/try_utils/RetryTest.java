@@ -23,7 +23,7 @@ public class RetryTest {
                 num.incrementAndGet();
                 throw new ExceptionA();
             }
-        }).withRetries().noDelay().execute();
+        }).retry().noDelay().execute();
         assert num.get() == 2;
     }
 
@@ -35,7 +35,7 @@ public class RetryTest {
                 num.incrementAndGet();
                 throw new ExceptionA();
             }
-        }).withRetries().noDelay();
+        }).retry().noDelay();
         try {
             tryy.execute();
             fail();
@@ -52,7 +52,7 @@ public class RetryTest {
                 num.incrementAndGet();
                 throw new ExceptionA();
             }
-        }).withRetries().noDelay().filter(e -> e instanceof ExceptionA).execute();
+        }).retry().noDelay().filter(e -> e instanceof ExceptionA).execute();
         assert num.get() == 2;
     }
 
@@ -64,7 +64,7 @@ public class RetryTest {
                 num.incrementAndGet();
                 throw new ExceptionA();
             }
-        }).withRetries().noDelay().filter(e -> e instanceof ExceptionB);
+        }).retry().noDelay().filter(e -> e instanceof ExceptionB);
         try {
             tryy.execute();
             fail();
@@ -81,7 +81,7 @@ public class RetryTest {
                 num.incrementAndGet();
                 throw new ExceptionA();
             }
-        }).withRetries().noDelay().maxAttempts(10).execute();
+        }).retry().noDelay().maxAttempts(10).execute();
         assert num.get() == 5;
     }
 
@@ -94,7 +94,7 @@ public class RetryTest {
                 num.incrementAndGet();
                 throw new ExceptionA();
             }
-        }).withRetries().fixedDelay(100).execute();
+        }).retry().fixedDelay(100).execute();
         LocalDateTime end = LocalDateTime.now();
         assert num.get() == 2;
         assert begin.plusNanos(100 * NANOS_IN_MILLI * 2).isBefore(end);
@@ -110,7 +110,7 @@ public class RetryTest {
                 num.incrementAndGet();
                 throw new ExceptionA();
             }
-        }).withRetries().delayFunction(l -> l * 100).execute();
+        }).retry().delayFunction(l -> l * 100).execute();
         LocalDateTime end = LocalDateTime.now();
         assert num.get() == 2;
         assert begin.plusNanos(300 * NANOS_IN_MILLI).isBefore(end);
@@ -126,7 +126,7 @@ public class RetryTest {
                 num1.incrementAndGet();
                 throw new ExceptionA();
             }
-        }).withRetries().noDelay().doOnError(e -> num2.incrementAndGet()).execute();
+        }).retry().noDelay().doOnError(e -> num2.incrementAndGet()).execute();
         assert num1.get() == 2;
         assert num2.get() == 2;
     }
@@ -140,7 +140,7 @@ public class RetryTest {
                 num1.incrementAndGet();
                 throw new ExceptionA();
             }
-        }).withRetries().noDelay().doOnError((e, l) -> num2.addAndGet(l)).execute();
+        }).retry().noDelay().doOnError((e, l) -> num2.addAndGet(l)).execute();
         assert num1.get() == 2;
         assert num2.get() == 3;
     }
@@ -153,12 +153,12 @@ public class RetryTest {
                 num.incrementAndGet();
                 throw new ExceptionA();
             }
-        }).withRetries().noDelay().map(x -> {
+        }).retry().noDelay().map(x -> {
             if (num.get() != 8) {
                 throw new ExceptionA();
             }
             return null;
-        }).withRetries().noDelay().execute();
+        }).retry().noDelay().execute();
         assert num.get() == 8;
     }
 }

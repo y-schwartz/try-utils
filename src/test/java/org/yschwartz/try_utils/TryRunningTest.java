@@ -5,9 +5,13 @@ import org.yschwartz.try_utils.exception.ExceptionA;
 import org.yschwartz.try_utils.exception.ExceptionB;
 import org.yschwartz.try_utils.model.Try;
 
+import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.Assert.fail;
+import static org.yschwartz.try_utils.RetryTest.NANOS_IN_MILLI;
 
 public class TryRunningTest {
     private final AtomicBoolean boolean1 = new AtomicBoolean(false);
@@ -33,6 +37,17 @@ public class TryRunningTest {
     public void testFinally() {
         Try.of(this::doNothing).finallyDo(this::setBoolean1).execute();
         assert boolean1.get();
+    }
+
+    @Test
+    public void testFinallyMultiple() {
+        AtomicReference<LocalDateTime> first = new AtomicReference<>();
+        AtomicReference<LocalDateTime> second = new AtomicReference<>();
+        Try.of(this::doNothing).finallyDo(() -> first.set(LocalDateTime.now()))
+                .finallyDo(() -> Try.of(() -> Thread.sleep(100)).execute())
+                .finallyDo(() -> second.set(LocalDateTime.now())).execute();
+        assert first.get().plusNanos(95 * NANOS_IN_MILLI).isBefore(second.get());
+        assert first.get().plusNanos(105 * NANOS_IN_MILLI).isAfter(second.get());
     }
 
     @Test
@@ -118,6 +133,25 @@ public class TryRunningTest {
     @Test(expected = ExceptionA.class)
     public void testCatchWithFilterNotMatching() {
         Try.of(this::throwA).catchAny().filter(e -> e instanceof ExceptionB).thenReturn().execute();
+    }
+
+    @Test
+    public void testCatchWithDoubleFilterMatching() {
+        Try.of(this::throwA).catchAny()
+                .filter(Objects::nonNull)
+                .filter(e -> e instanceof ExceptionA)
+                .thenDo(e -> setBoolean1()).execute();
+        assert boolean1.get();
+    }
+
+    @Test(expected = ExceptionA.class)
+    public void testCatchWithDoubleFilterNotMatching() {
+        Try.of(this::throwA).catchAny()
+                .filter(e -> e instanceof ExceptionB)
+                .filter(e -> {
+                    throw new RuntimeException();
+                })
+                .thenReturn().execute();
     }
 
     private void setBoolean1() {

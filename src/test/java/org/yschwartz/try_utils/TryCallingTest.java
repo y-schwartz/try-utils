@@ -135,6 +135,42 @@ public class TryCallingTest {
         assert actual;
     }
 
+    @Test
+    public void testTryMConsume() {
+        Try.of(() -> "test")
+                .consume(b -> setBoolean1())
+                .execute();
+        assert boolean1.get();
+    }
+
+    @Test(expected = ExceptionA.class)
+    public void testTryConsumeThrows() {
+        Try.of(this::throwA).consume(b -> setBoolean1()).execute();
+    }
+
+    @Test(expected = ExceptionA.class)
+    public void testTryConsumeThrowsSecond() {
+        Try.of(() -> null).consume(x -> throwA()).execute();
+    }
+
+    @Test
+    public void testTryConsumeCatch() {
+        Try.of(this::throwA)
+                .catchAny().thenReturn("test")
+                .consume(b -> setBoolean1())
+                .execute();
+        assert boolean1.get();
+    }
+
+    @Test
+    public void testTryConsumeCatchSecond() {
+        Try.of(this::throwA)
+                .consume(b -> setBoolean1())
+                .catchAny().thenDo(x -> setBoolean1())
+                .execute();
+        assert boolean1.get();
+    }
+
     private String getValue1() {
         return "value1";
     }
