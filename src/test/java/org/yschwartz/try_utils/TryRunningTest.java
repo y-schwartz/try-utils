@@ -46,8 +46,8 @@ public class TryRunningTest {
         Try.of(this::doNothing).finallyDo(() -> first.set(LocalDateTime.now()))
                 .finallyDo(() -> Try.of(() -> Thread.sleep(100)).execute())
                 .finallyDo(() -> second.set(LocalDateTime.now())).execute();
-        assert first.get().plusNanos(95 * NANOS_IN_MILLI).isBefore(second.get());
-        assert first.get().plusNanos(105 * NANOS_IN_MILLI).isAfter(second.get());
+        assert first.get().plusNanos(90 * NANOS_IN_MILLI).isBefore(second.get());
+        assert first.get().plusNanos(110 * NANOS_IN_MILLI).isAfter(second.get());
     }
 
     @Test
@@ -73,7 +73,7 @@ public class TryRunningTest {
 
     @Test
     public void testTryThrowsCatch() {
-        Try.of(this::throwA).catchAny().thenDo(t -> setBoolean1()).execute();
+        Try.of(this::throwA).catchAny().thenDo(this::setBoolean1).execute();
         assert boolean1.get();
     }
 
@@ -95,7 +95,7 @@ public class TryRunningTest {
 
     @Test
     public void testDoubleCatchFirst() {
-        Try.of(this::throwA).catchException(ExceptionA.class).thenDo(t -> setBoolean1())
+        Try.of(this::throwA).catchException(ExceptionA.class).thenDo(this::setBoolean1)
                 .catchException(RuntimeException.class).thenDo(t -> setBoolean2()).execute();
         assert boolean1.get();
         assert !boolean2.get();
@@ -112,6 +112,11 @@ public class TryRunningTest {
     @Test(expected = ExceptionB.class)
     public void testCatchAndThrow() {
         Try.of(this::throwA).catchAny().thenThrow(t -> new ExceptionB()).execute();
+    }
+
+    @Test(expected = ExceptionA.class)
+    public void testCatchReThrow() {
+        Try.of(this::throwA).catchAny().thenThrow().execute();
     }
 
     @Test(expected = ExceptionB.class)

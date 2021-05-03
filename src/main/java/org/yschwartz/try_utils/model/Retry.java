@@ -40,20 +40,20 @@ public class Retry<R> extends Try<R> {
         return this;
     }
 
-    public Retry<R> delayFunction(Function<Long, Long> iterationToDelayFunction) {
-        Objects.requireNonNull(iterationToDelayFunction);
-        retryLogic.setDelayFunction(iterationToDelayFunction);
+    public Retry<R> delayFunction(Function<Long, Long> attemptNumToDelay) {
+        Objects.requireNonNull(attemptNumToDelay);
+        retryLogic.setDelayFunction(attemptNumToDelay);
         return this;
     }
 
-    public Retry<R> doOnError(Consumer<Exception> exceptionConsumer) {
+    public Retry<R> onFailedAttempt(Consumer<Exception> exceptionConsumer) {
         Objects.requireNonNull(exceptionConsumer);
-        return doOnError((e, x) -> exceptionConsumer.accept(e));
+        return onFailedAttempt((e, x) -> exceptionConsumer.accept(e));
     }
 
-    public Retry<R> doOnError(BiConsumer<Exception, Long> exceptionAndIterationConsumer) {
-        Objects.requireNonNull(exceptionAndIterationConsumer);
-        retryLogic.setFailureConsumer(exceptionAndIterationConsumer);
+    public Retry<R> onFailedAttempt(BiConsumer<Exception, Long> exceptionAndAttemptNumConsumer) {
+        Objects.requireNonNull(exceptionAndAttemptNumConsumer);
+        retryLogic.setFailureConsumer(exceptionAndAttemptNumConsumer);
         return this;
     }
 }

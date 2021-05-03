@@ -126,7 +126,7 @@ public class RetryTest {
                 num1.incrementAndGet();
                 throw new ExceptionA();
             }
-        }).retry().noDelay().doOnError(e -> num2.incrementAndGet()).execute();
+        }).retry().noDelay().onFailedAttempt(e -> num2.incrementAndGet()).execute();
         assert num1.get() == 2;
         assert num2.get() == 2;
     }
@@ -140,7 +140,7 @@ public class RetryTest {
                 num1.incrementAndGet();
                 throw new ExceptionA();
             }
-        }).retry().noDelay().doOnError((e, l) -> num2.addAndGet(l)).execute();
+        }).retry().noDelay().onFailedAttempt((e, l) -> num2.addAndGet(l)).execute();
         assert num1.get() == 2;
         assert num2.get() == 3;
     }

@@ -1,13 +1,16 @@
 package org.yschwartz.try_utils.model;
 
+import org.yschwartz.try_utils.functional.ExtendedConsumer;
+import org.yschwartz.try_utils.functional.ExtendedRunnable;
 import org.yschwartz.try_utils.util.ExceptionMatcher;
+import org.yschwartz.try_utils.util.ExceptionUtils;
 
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import static org.yschwartz.try_utils.util.FunctionalUtils.*;
+import static org.yschwartz.try_utils.util.FunctionalUtils.consumerThenFunction;
 
 
 public class Catch<E extends Exception, R> {
@@ -28,15 +31,19 @@ public class Catch<E extends Exception, R> {
         return this;
     }
 
-    public Catch<E, R> then(Runnable runnable) {
+    public Catch<E, R> then(ExtendedRunnable runnable) {
         Objects.requireNonNull(runnable);
-        return then(runnableToConsumer(runnable));
+        return then(runnable.toConsumer());
     }
 
     public Catch<E, R> then(Consumer<E> exceptionConsumer) {
         Objects.requireNonNull(exceptionConsumer);
         this.exceptionConsumer = this.exceptionConsumer.andThen(exceptionConsumer);
         return this;
+    }
+
+    public Try<R> thenThrow() {
+        return thenThrow(ExceptionUtils::toRuntimeException);
     }
 
     public Try<R> thenThrow(Function<E, ? extends RuntimeException> exceptionMapper) {
@@ -46,9 +53,14 @@ public class Catch<E extends Exception, R> {
         });
     }
 
-    public Try<R> thenDo(Consumer<E> exceptionConsumer) {
+    public Try<R> thenDo(ExtendedRunnable runnable) {
+        Objects.requireNonNull(runnable);
+        return thenDo(runnable.toConsumer());
+    }
+
+    public Try<R> thenDo(ExtendedConsumer<E> exceptionConsumer) {
         Objects.requireNonNull(exceptionConsumer);
-        return thenReturn(consumerToFunction(exceptionConsumer));
+        return thenReturn(exceptionConsumer.toFunction());
     }
 
     public Try<R> thenReturn() {

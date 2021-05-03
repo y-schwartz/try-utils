@@ -17,4 +17,11 @@ public interface ThrowingConsumer<S> {
      * @throws Exception if the operation Threw an Exception
      */
     void accept(S s) throws Exception;
+
+    default <T> ThrowingFunction<S, T> toFunction() {
+        return s -> {
+            accept(s);
+            return null;
+        };
+    }
 }

@@ -11,9 +11,6 @@ import org.yschwartz.try_utils.logic.TryWithResourceLogic;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 
-import static org.yschwartz.try_utils.util.FunctionalUtils.consumerToFunction;
-import static org.yschwartz.try_utils.util.FunctionalUtils.runnableToCallable;
-
 public class Try<R> {
 
     private final BaseTryLogic<R> tryLogic;
@@ -22,9 +19,9 @@ public class Try<R> {
         this.tryLogic = tryLogic;
     }
 
-    public static Try<Void> of(ThrowingRunnable runnable) {
-        Objects.requireNonNull(runnable);
-        return of(runnableToCallable(runnable));
+    public static Try<Void> of(ThrowingRunnable throwingRunnable) {
+        Objects.requireNonNull(throwingRunnable);
+        return of(throwingRunnable.toCallable());
     }
 
     public static <R> Try<R> of(Callable<R> callable) {
@@ -36,7 +33,7 @@ public class Try<R> {
                                                          ThrowingConsumer<S> resourceConsumer) {
         Objects.requireNonNull(resource);
         Objects.requireNonNull(resourceConsumer);
-        return of(resource, consumerToFunction(resourceConsumer));
+        return of(resource, resourceConsumer.toFunction());
     }
 
     public static <S extends AutoCloseable, R> Try<R> of(S resource,
@@ -46,18 +43,23 @@ public class Try<R> {
         return new Try<>(new TryWithResourceLogic<>(resource, resourceToValueFunction));
     }
 
+    public Try<Void> consume(ThrowingConsumer<R> throwingConsumer) {
+        Objects.requireNonNull(throwingConsumer);
+        return map(throwingConsumer.toFunction());
+    }
+
+    public <S> Try<S> map(ThrowingFunction<R, S> throwingFunction) {
+        Objects.requireNonNull(throwingFunction);
+        return of(() -> throwingFunction.apply(execute()));
+    }
+
+    public Try<R> finallyDo(ExtendedRunnable runnable) {
+        tryLogic.setFinallyRunnable(runnable);
+        return this;
+    }
+
     public Retry<R> retry() {
         return new Retry<>(tryLogic);
-    }
-
-    public <S> Try<S> map(ThrowingFunction<R, S> function) {
-        Objects.requireNonNull(function);
-        return of(() -> function.apply(execute()));
-    }
-
-    public Try<Void> consume(ThrowingConsumer<R> consumer) {
-        Objects.requireNonNull(consumer);
-        return map(consumerToFunction(consumer));
     }
 
     public Catch<Exception, R> catchAny() {
@@ -67,11 +69,6 @@ public class Try<R> {
     public <E extends Exception> Catch<E, R> catchException(Class<E> exceptionType) {
         Objects.requireNonNull(exceptionType);
         return new Catch<>(this, exceptionType);
-    }
-
-    public Try<R> finallyDo(ExtendedRunnable runnable) {
-        tryLogic.setFinallyRunnable(runnable);
-        return this;
     }
 
     public R execute() {
