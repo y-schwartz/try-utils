@@ -2,7 +2,6 @@ package org.yschwartz.try_utils.logic;
 
 import org.yschwartz.try_utils.functional.ExtendedRunnable;
 import org.yschwartz.try_utils.util.ExceptionMatcher;
-import org.yschwartz.try_utils.util.ExceptionUtils;
 
 import java.util.Optional;
 import java.util.concurrent.Callable;
@@ -11,8 +10,9 @@ import java.util.function.Function;
 public abstract class BaseTryLogic<R> implements Callable<R> {
 
     private final CatchFunctions<R> catchFunctions = new CatchFunctions<>();
-    private ExtendedRunnable finallyRunnable;
     private RetryLogic<R> retryLogic;
+    private ExtendedRunnable finallyRunnable = () -> {
+    };
 
     public abstract R execute();
 
@@ -29,7 +29,7 @@ public abstract class BaseTryLogic<R> implements Callable<R> {
     }
 
     public void setFinallyRunnable(ExtendedRunnable runnable) {
-        finallyRunnable = Optional.ofNullable(finallyRunnable).map(r -> r.andThen(runnable)).orElse(runnable);
+        finallyRunnable = finallyRunnable.andThen(runnable);
     }
 
     protected R doTry() throws Exception {
@@ -37,11 +37,10 @@ public abstract class BaseTryLogic<R> implements Callable<R> {
     }
 
     protected R doCatch(Exception e) {
-        ExceptionUtils.filterStackTrace(e);
         return catchFunctions.applyFunction(e);
     }
 
     protected void doFinally() {
-        Optional.ofNullable(finallyRunnable).ifPresent(Runnable::run);
+        finallyRunnable.run();
     }
 }

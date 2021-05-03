@@ -30,6 +30,7 @@ public class CatchFunctions<R> extends LinkedList<CatchFunctions.CatchFunction<?
             this.exceptionToValueFunction = exceptionToValueFunction;
         }
 
+        @Override
         public R apply(Exception e) {
             return exceptionToValueFunction.apply(exceptionMatcher.match(e));
         }

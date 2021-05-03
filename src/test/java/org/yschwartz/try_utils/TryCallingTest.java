@@ -6,6 +6,7 @@ import org.yschwartz.try_utils.exception.ExceptionB;
 import org.yschwartz.try_utils.model.Try;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -97,6 +98,20 @@ public class TryCallingTest {
     @Test(expected = ExceptionA.class)
     public void testCatchAndThrowNotCaught() {
         Try.of(this::throwA).catchException(ExceptionB.class).thenThrow(t -> t).execute();
+    }
+
+    @Test
+    public void testCatchThen() {
+        AtomicReference<Exception> exception = new AtomicReference<>(null);
+        String actual = Try.of(this::throwA)
+                .catchAny()
+                .then(exception::set)
+                .then(this::setBoolean1)
+                .thenReturn("test")
+                .execute();
+        assert actual.equals("test");
+        assert exception.get() != null;
+        assert boolean1.get();
     }
 
     @Test

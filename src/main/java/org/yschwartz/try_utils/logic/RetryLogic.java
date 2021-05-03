@@ -3,7 +3,6 @@ package org.yschwartz.try_utils.logic;
 import org.yschwartz.try_utils.model.Try;
 import org.yschwartz.try_utils.util.ExceptionMatcher;
 
-import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -19,7 +18,8 @@ public class RetryLogic<R> implements Callable<R> {
     private final Callable<R> callable;
     private long maxAttempts = DEFAULT_ATTEMPTS;
     private Function<Long, Long> delayFunction = l -> (long) DEFAULT_DELAY;
-    private BiConsumer<Exception, Long> failureConsumer;
+    private BiConsumer<Exception, Long> failureConsumer = (e, x) -> {
+    };
 
     public RetryLogic(Callable<R> callable) {
         this.callable = callable;
@@ -53,8 +53,8 @@ public class RetryLogic<R> implements Callable<R> {
         this.delayFunction = delayFunction;
     }
 
-    public void setFailureConsumer(BiConsumer<Exception, Long> failureConsumer) {
-        this.failureConsumer = Optional.ofNullable(this.failureConsumer).map(c -> c.andThen(failureConsumer)).orElse(failureConsumer);
+    public void setFailureConsumer(BiConsumer<Exception, Long> consumer) {
+        failureConsumer = failureConsumer.andThen(consumer);
     }
 
     private void handleException(Exception e, long iteration) throws Exception {
@@ -66,7 +66,7 @@ public class RetryLogic<R> implements Callable<R> {
     }
 
     private void consumeFailure(Exception e, long iteration) {
-        Optional.ofNullable(failureConsumer).ifPresent(consumer -> consumer.accept(e, iteration));
+        failureConsumer.accept(e, iteration);
     }
 
     private void sleep(long iteration) {
