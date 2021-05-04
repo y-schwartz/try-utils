@@ -1,7 +1,5 @@
 package org.yschwartz.try_utils.logic;
 
-import org.yschwartz.try_utils.util.ExceptionMatcher;
-
 import java.util.LinkedList;
 import java.util.function.Function;
 

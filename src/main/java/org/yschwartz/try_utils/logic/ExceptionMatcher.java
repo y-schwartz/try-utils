@@ -1,4 +1,4 @@
-package org.yschwartz.try_utils.util;
+package org.yschwartz.try_utils.logic;
 
 import java.util.Objects;
 import java.util.function.Predicate;
@@ -17,12 +17,12 @@ public class ExceptionMatcher<E extends Exception> {
         this.filter = this.filter.and(filter);
     }
 
-    public boolean matches(Exception e) {
+    boolean matches(Exception e) {
         Objects.requireNonNull(e);
         return exceptionType.isInstance(e) && filter.test(match(e));
     }
 
-    public E match(Exception e) {
+    E match(Exception e) {
         Objects.requireNonNull(e);
         return exceptionType.cast(e);
     }

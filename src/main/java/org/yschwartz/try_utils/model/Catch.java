@@ -2,7 +2,7 @@ package org.yschwartz.try_utils.model;
 
 import org.yschwartz.try_utils.functional.ExtendedConsumer;
 import org.yschwartz.try_utils.functional.ExtendedRunnable;
-import org.yschwartz.try_utils.util.ExceptionMatcher;
+import org.yschwartz.try_utils.logic.ExceptionMatcher;
 import org.yschwartz.try_utils.util.ExceptionUtils;
 
 import java.util.Objects;

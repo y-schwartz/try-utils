@@ -1,7 +1,6 @@
 package org.yschwartz.try_utils.logic;
 
 import org.yschwartz.try_utils.functional.ExtendedRunnable;
-import org.yschwartz.try_utils.util.ExceptionMatcher;
 
 import java.util.Optional;
 import java.util.concurrent.Callable;

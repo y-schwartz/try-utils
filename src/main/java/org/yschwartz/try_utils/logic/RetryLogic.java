@@ -2,7 +2,6 @@ package org.yschwartz.try_utils.logic;
 
 import org.yschwartz.try_utils.exception.RetriesInterruptedException;
 import org.yschwartz.try_utils.model.Try;
-import org.yschwartz.try_utils.util.ExceptionMatcher;
 
 import java.util.concurrent.Callable;
 import java.util.function.BiConsumer;
