@@ -3,6 +3,7 @@ package org.yschwartz.try_utils;
 import org.junit.Test;
 import org.yschwartz.try_utils.exception.ExceptionA;
 import org.yschwartz.try_utils.exception.ExceptionB;
+import org.yschwartz.try_utils.exception.RetriesInterruptedException;
 import org.yschwartz.try_utils.model.Try;
 
 import java.time.LocalDateTime;
@@ -24,6 +25,24 @@ public class RetryTest {
                 throw new ExceptionA();
             }
         }).retry().noDelay().execute();
+        assert num.get() == 2;
+    }
+
+    @Test
+    public void testRetryInterrupted() {
+        AtomicLong num = new AtomicLong(0);
+        Runnable runnable = () -> Try.of(this::throwA)
+                .retry()
+                .fixedDelay(100)
+                .catchException(RetriesInterruptedException.class)
+                .thenDo(e -> num.set(e.getAttemptNumber()))
+                .execute();
+        Thread thread = new Thread(runnable);
+        Try.of(thread::start)
+                .andThen(() -> Thread.sleep(150))
+                .andThen(thread::interrupt)
+                .andThen(thread::join)
+                .execute();
         assert num.get() == 2;
     }
 
@@ -126,6 +145,20 @@ public class RetryTest {
                 num1.incrementAndGet();
                 throw new ExceptionA();
             }
+        }).retry().noDelay().onFailedAttempt(num2::incrementAndGet).execute();
+        assert num1.get() == 2;
+        assert num2.get() == 2;
+    }
+
+    @Test
+    public void testRetryDoOnErrorExceptionConsumer() {
+        final AtomicInteger num1 = new AtomicInteger();
+        final AtomicInteger num2 = new AtomicInteger();
+        Try.of(() -> {
+            if (num1.get() != 2) {
+                num1.incrementAndGet();
+                throw new ExceptionA();
+            }
         }).retry().noDelay().onFailedAttempt(e -> num2.incrementAndGet()).execute();
         assert num1.get() == 2;
         assert num2.get() == 2;
@@ -160,5 +193,9 @@ public class RetryTest {
             return null;
         }).retry().noDelay().execute();
         assert num.get() == 8;
+    }
+
+    private void throwA() {
+        throw new ExceptionA();
     }
 }

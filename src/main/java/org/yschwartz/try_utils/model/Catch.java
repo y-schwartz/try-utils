@@ -9,6 +9,7 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 import static org.yschwartz.try_utils.util.FunctionalUtils.consumerThenFunction;
 
@@ -46,6 +47,10 @@ public class Catch<E extends Exception, R> {
         return thenThrow(ExceptionUtils::toRuntimeException);
     }
 
+    public Try<R> thenThrow(RuntimeException exception) {
+        return thenThrow(e -> exception);
+    }
+
     public Try<R> thenThrow(Function<E, ? extends RuntimeException> exceptionMapper) {
         Objects.requireNonNull(exceptionMapper);
         return thenDo(e -> {
@@ -68,7 +73,12 @@ public class Catch<E extends Exception, R> {
     }
 
     public Try<R> thenReturn(R value) {
-        return thenReturn(e -> value);
+        return thenReturn(() -> value);
+    }
+
+    public Try<R> thenReturn(Supplier<R> valueSupplier) {
+        Objects.requireNonNull(valueSupplier);
+        return thenReturn(e -> valueSupplier.get());
     }
 
     public Try<R> thenReturn(Function<E, R> exceptionToValueFunction) {

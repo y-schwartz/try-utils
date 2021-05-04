@@ -1,5 +1,6 @@
 package org.yschwartz.try_utils.logic;
 
+import org.yschwartz.try_utils.exception.RetriesInterruptedException;
 import org.yschwartz.try_utils.model.Try;
 import org.yschwartz.try_utils.util.ExceptionMatcher;
 
@@ -70,6 +71,10 @@ public class RetryLogic<R> implements Callable<R> {
     }
 
     private void sleep(long iteration) {
-        Try.of(() -> delayFunction.apply(iteration)).consume(Thread::sleep).execute();
+        Try.of(() -> delayFunction.apply(iteration))
+                .consume(Thread::sleep)
+                .catchException(InterruptedException.class)
+                .thenThrow(e -> new RetriesInterruptedException(e, iteration))
+                .execute();
     }
 }

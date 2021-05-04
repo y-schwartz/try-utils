@@ -1,5 +1,6 @@
 package org.yschwartz.try_utils.model;
 
+import org.yschwartz.try_utils.functional.ExtendedRunnable;
 import org.yschwartz.try_utils.logic.BaseTryLogic;
 import org.yschwartz.try_utils.logic.RetryLogic;
 
@@ -44,6 +45,11 @@ public class Retry<R> extends Try<R> {
         Objects.requireNonNull(attemptNumToDelay);
         retryLogic.setDelayFunction(attemptNumToDelay);
         return this;
+    }
+
+    public Retry<R> onFailedAttempt(ExtendedRunnable runnable) {
+        Objects.requireNonNull(runnable);
+        return onFailedAttempt(runnable.toConsumer());
     }
 
     public Retry<R> onFailedAttempt(Consumer<Exception> exceptionConsumer) {

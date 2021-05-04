@@ -23,4 +23,8 @@ public interface ThrowingRunnable {
             return null;
         };
     }
+
+    default <T> ThrowingConsumer<T> toConsumer() {
+        return x -> run();
+    }
 }

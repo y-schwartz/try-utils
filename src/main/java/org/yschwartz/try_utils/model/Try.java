@@ -43,6 +43,11 @@ public class Try<R> {
         return new Try<>(new TryWithResourceLogic<>(resource, resourceToValueFunction));
     }
 
+    public Try<Void> andThen(ThrowingRunnable throwingRunnable) {
+        Objects.requireNonNull(throwingRunnable);
+        return consume(throwingRunnable.toConsumer());
+    }
+
     public Try<Void> consume(ThrowingConsumer<R> throwingConsumer) {
         Objects.requireNonNull(throwingConsumer);
         return map(throwingConsumer.toFunction());

@@ -87,6 +87,11 @@ public class TryCallingTest {
 
     @Test(expected = ExceptionB.class)
     public void testCatchAndThrow() {
+        Try.of(this::throwA).catchAny().thenThrow(new ExceptionB()).execute();
+    }
+
+    @Test(expected = ExceptionB.class)
+    public void testCatchAndThrowMapper() {
         Try.of(this::throwA).catchAny().thenThrow(t -> new ExceptionB()).execute();
     }
 
@@ -97,7 +102,7 @@ public class TryCallingTest {
 
     @Test(expected = ExceptionA.class)
     public void testCatchAndThrowNotCaught() {
-        Try.of(this::throwA).catchException(ExceptionB.class).thenThrow(t -> t).execute();
+        Try.of(this::throwA).catchException(ExceptionB.class).thenThrow().execute();
     }
 
     @Test
