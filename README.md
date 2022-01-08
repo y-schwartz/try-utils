@@ -2,16 +2,6 @@
 
 A Java util for writing try/catch blocks in a functional style
 
-### Maven dependency:
-
-```xml
-<dependency>
- <groupId>org.yschwartz</groupId>
- <artifactId>try-utils</artifactId>
- <version>1.0</version>
-</dependency>
-```
-
 ### Examples
 
 Simple try
